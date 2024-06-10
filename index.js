@@ -66,6 +66,19 @@ async function run() {
       next();
     };
 
+    // verify host middleware
+    const verifyVolunteer = async (req, res, next) => {
+      const user = req.user;
+      const query = { email: user?.email };
+      const result = await userCollection.findOne(query);
+      console.log(result?.role);
+      if (!result || result?.role !== "volunteer") {
+        return res.status(401).send({ message: "unauthorized access!!" });
+      }
+
+      next();
+    };
+
     // USER API
     app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray();
@@ -198,8 +211,8 @@ async function run() {
       res.send(result);
     });
 
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
+    // await client.connect();
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
