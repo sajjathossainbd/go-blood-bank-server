@@ -123,25 +123,38 @@ async function run() {
     });
 
     // BLOOD DONATION API
-    app.get('/blood-donation', async (req, res) => {
+    app.get("/blood-donation", async (req, res) => {
       const result = await bloodDonationCollection.find().toArray();
       res.send(result);
     });
 
-    app.get('/blood-donation/:id', async (req, res) => {
+    app.post("/blood-donation", verifyToken, async (req, res) => {
+      const item = req.body;
+      const result = await bloodDonationCollection.insertOne(item);
+      res.send(result);
+    });
+
+    app.get("/blood-donation/:email", async (req, res) => {
+      const email = req.params.email;
+      let query = { "donor.email": email };
+      const result = await bloodDonationCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.get("/blood-donation/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) }
+      const query = { _id: new ObjectId(id) };
       const result = await bloodDonationCollection.findOne(query);
       res.send(result);
-    })
+    });
     // Distric API
-    app.get('/distric', async (req, res) => {
+    app.get("/distric", async (req, res) => {
       const result = await districCollection.find().toArray();
       res.send(result);
     });
 
     // Upazila API
-    app.get('/upazila', async (req, res) => {
+    app.get("/upazila", async (req, res) => {
       const result = await upazilaCollection.find().toArray();
       res.send(result);
     });
