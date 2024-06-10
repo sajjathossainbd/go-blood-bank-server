@@ -100,7 +100,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/user/:email", async (req, res) => {
+    app.get("/users/:email", async (req, res) => {
       const email = req.params.email;
       const result = await userCollection.findOne({ email });
       res.send(result);
@@ -122,21 +122,27 @@ async function run() {
       res.send({ admin });
     });
 
-    app.post("/users", async (req, res) => {
+    // save a user data in db
+    app.put("/users", async (req, res) => {
       const user = req.body;
+
       const query = { email: user?.email };
+      // check if user already exists in db
       const isExist = await userCollection.findOne(query);
       if (isExist) {
         if (user.status === "Requested") {
+          // if existing user try to change his role
           const result = await userCollection.updateOne(query, {
             $set: { status: user?.status },
           });
           return res.send(result);
         } else {
+          // if existing user login again
           return res.send(isExist);
         }
       }
 
+      // save user for the first time
       const options = { upsert: true };
       const updateDoc = {
         $set: {
