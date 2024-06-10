@@ -79,6 +79,21 @@ async function run() {
       next();
     };
 
+    // create-payment-intent
+    app.post("/create-payment-intent", verifyToken, async (req, res) => {
+      const price = req.body.price;
+      const priceInCent = parseFloat(price) * 100;
+      if (!price || priceInCent < 1) return;
+      const { client_secret } = await stripe.paymentIntents.create({
+        amount: priceInCent,
+        currency: "usd",
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+      res.send({ clientSecret: client_secret });
+    });
+
     // USER API
     app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray();
@@ -104,22 +119,18 @@ async function run() {
     app.post("/users", async (req, res) => {
       const user = req.body;
       const query = { email: user?.email };
-      // check if user already exists in db
       const isExist = await userCollection.findOne(query);
       if (isExist) {
         if (user.status === "Requested") {
-          // if existing user try to change his role
           const result = await userCollection.updateOne(query, {
             $set: { status: user?.status },
           });
           return res.send(result);
         } else {
-          // if existing user login again
           return res.send(isExist);
         }
       }
 
-      // save user for the first time
       const options = { upsert: true };
       const updateDoc = {
         $set: {
