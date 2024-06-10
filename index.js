@@ -24,6 +24,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const userCollection = client.db("gobloodbank").collection("users");
+    const blogsCollection = client.db("gobloodbank").collection("blogs");
     const districCollection = client.db("gobloodbank").collection("distric");
     const upazilaCollection = client.db("gobloodbank").collection("upazila");
     const bloodDonationCollection = client
@@ -89,12 +90,31 @@ async function run() {
 
     app.post("/users", async (req, res) => {
       const user = req.body;
-      const query = { email: user.email };
-      const existingUser = await userCollection.findOne(query);
-      if (existingUser) {
-        return res.send({ message: "user already exists", insertedId: null });
+      const query = { email: user?.email };
+      // check if user already exists in db
+      const isExist = await userCollection.findOne(query);
+      if (isExist) {
+        if (user.status === "Requested") {
+          // if existing user try to change his role
+          const result = await userCollection.updateOne(query, {
+            $set: { status: user?.status },
+          });
+          return res.send(result);
+        } else {
+          // if existing user login again
+          return res.send(isExist);
+        }
       }
-      const result = await userCollection.insertOne(user);
+
+      // save user for the first time
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          ...user,
+          timestamp: Date.now(),
+        },
+      };
+      const result = await userCollection.updateOne(query, updateDoc, options);
       res.send(result);
     });
 
@@ -114,6 +134,10 @@ async function run() {
         res.send(result);
       }
     );
+
+    // app.put("/users", async (req, res) => {
+
+    // });
 
     app.delete("/users/:id", verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
@@ -159,6 +183,18 @@ async function run() {
     // Upazila API
     app.get("/upazila", async (req, res) => {
       const result = await upazilaCollection.find().toArray();
+      res.send(result);
+    });
+
+    // BLOGS API
+    app.get("/blogs", async (req, res) => {
+      const result = await blogsCollection.find().toArray();
+      res.send(result);
+    });
+    app.get("/blogs/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await blogsCollection.findOne(query);
       res.send(result);
     });
 
