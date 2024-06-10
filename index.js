@@ -195,18 +195,19 @@ async function run() {
       const result = await bloodDonationCollection.find().toArray();
       res.send(result);
     });
-    app.get("/blood-donation/:email", async (req, res) => {
-      const email = req.params.email;
-      let query = { "donor.email": email };
-      const result = await bloodDonationCollection.find(query).toArray();
-      res.send(result);
-    });
     app.get("/blood-donation/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await bloodDonationCollection.findOne(query);
       res.send(result);
     });
+    app.get("/blood-donation/:email", async (req, res) => {
+      const email = req.params.email;
+      let query = { "donor.email": email };
+      const result = await bloodDonationCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.post("/blood-donation", verifyToken, async (req, res) => {
       const item = req.body;
       const result = await bloodDonationCollection.insertOne(item);
