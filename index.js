@@ -24,6 +24,8 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const userCollection = client.db("gobloodbank").collection("users");
+    const districCollection = client.db("gobloodbank").collection("distric");
+    const upazilaCollection = client.db("gobloodbank").collection("upazila");
     const bloodDonationCollection = client
       .db("gobloodbank")
       .collection("bloodDonation");
@@ -132,6 +134,17 @@ async function run() {
       const result = await bloodDonationCollection.findOne(query);
       res.send(result);
     })
+    // Distric API
+    app.get('/distric', async (req, res) => {
+      const result = await districCollection.find().toArray();
+      res.send(result);
+    });
+
+    // Upazila API
+    app.get('/upazila', async (req, res) => {
+      const result = await upazilaCollection.find().toArray();
+      res.send(result);
+    });
 
     await client.connect();
     await client.db("admin").command({ ping: 1 });
